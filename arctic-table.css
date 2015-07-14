@@ -1,0 +1,16 @@
+.arctic-table {
+  position:relative;
+}
+.arctic-table .arctic-table-wrapper {
+  overflow:auto;
+}
+
+.arctic-table .frozen-column {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.arctic-table .frozen-column {
+  background-color:white;
+}

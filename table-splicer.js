@@ -7,14 +7,18 @@
     // cloned table "shell" (region being: thead, tbody, tfoot, or directly onto the table)
     // Dimension: 'row' or 'col'
     cloneSegment: function( table, segment, dimension, region ) {
-      var $segment    = $(segment),
-          $table      = $(table),
+      var $table      = $(table),
           $clonedTable,
           $clonedSegment;
 
 
       if(dimension == 'row') {
         // Clone a ROW
+
+        if(_.isNumber(segment)) {
+          segment = $table.find(region + ' tr:nth-child(' + segment + ')');
+        }
+        var $segment = $(segment);
 
         $clonedTable = this.getEmptyCloneOfTable( $table );
         $clonedSegment = $segment.clone();
@@ -41,13 +45,16 @@
       $clonedTable.css('max-width', $table.width());
       return $clonedTable;
     },
-    cloneColumnByFiltering: function( $table, column ) {
+    cloneColumnByFiltering: function( $table, colIdx ) {
       var $clonedTable = $table.clone(),
           partialSelector = ':nth-child(' + colIdx + ')';
 
+      this.sanitzeClone( $clonedTable );
+      this.matchCellHeights( $table, $clonedTable, colIdx );
+
       // Remove all cells from the clone that
-      $clonedTable.find(':not(td' + partialSelector + ')').remove();
-      $clonedTable.find(':not(th' + partialSelector + ')').remove();
+      $clonedTable.find('td:not(' + partialSelector + ')').remove();
+      $clonedTable.find('th:not(' + partialSelector + ')').remove();
 
       this.generateColsForTableClone( $table, $clonedTable );
       return $clonedTable;
@@ -56,7 +63,7 @@
       return this.cloneSegment( table, row, 'row', 'tbody');
     },
     cloneColumn: function( table, col ) {
-      return this.cloneSegment( table, col, 'row', 'table');
+      return this.cloneSegment( table, col, 'col', 'table');
     },
     cloneHeader: function( table ) {
       return this.cloneSegment( table, $(table).find('thead'), 'row');
@@ -90,9 +97,54 @@
       _.each( zipped, function( item ) {
         var $el     = $(item[0]),
             width   = item[1];
+
         $el.width( width );
       });
     },
+
+    // For each row in the clone, match the source height
+    matchCellHeights: function( table, clone, colIdx ) {
+      var $table = $(table),
+          $clone = $(clone);
+
+      this.matchCellHeightsForRegion( $table, $clone, colIdx, 'thead' );
+      this.matchCellHeightsForRegion( $table, $clone, colIdx, 'tbody' );
+      this.matchCellHeightsForRegion( $table, $clone, colIdx, 'tfoot' );
+      // heights.thead = _.map( $table.find('thead th:nth-child(' + colIdx  +  ')'), function( cell ) {
+      //   return $(cell).height();
+      // });
+      // _.each( heights.thead, function( height, idx ) {
+      //   $clone.find('thead tr:nth-child(' + idx + ') th').height( height );
+      // });
+      //
+      // heights.tbody = _.map( $table.find('tbody td:nth-child(' + colIdx  +  ')'), function( cell ) {
+      //   return $(cell).height();
+      // });
+      // _.each( heights.thead, function( height, idx ) {
+      //   $clone.find('tbody tr:nth-child(' + idx + ') td').height( height );
+      // });
+      //
+      // heights.tfoot = _.map( $table.find('tfoot th:nth-child(' + colIdx  +  ')'), function( cell ) {
+      //   return $(cell).height();
+      // });
+      // _.each( heights.thead, function( height, idx ) {
+      //   $clone.find('tfoot tr:nth-child(' + idx + ') th').height( height );
+      // });
+    },
+
+    matchCellHeightsForRegion: function( $table, $clone, colIdx, region ) {
+      var tag = (region == 'tbody') ? 'td' : 'th',
+          heights;
+
+      heights = _.map( $table.find(region + ' ' + tag + ':nth-child(' + colIdx  +  ')'), function( cell ) {
+        return $(cell).outerHeight();
+      });
+      _.each( heights, function( height, idx ) {
+        var row = idx + 1;
+        $clone.find(region + ' tr:nth-child(' + row + ') ' + tag).height( height );
+      });
+    },
+
     // Checks if the source table already has columns and fills in any
     // missing ones
     fillColsInTableClone: function( table, clone ) {
@@ -115,11 +167,20 @@
       }
     },
 
+    // Performs some basic sanitization functions such as removing ids
+    sanitzeClone: function( $table ) {
+      $table.attr('id', '');
+      return $table;
+    },
+
     // We have to build an approximation of the table in order to retain the size
     // and positioning of the row and its cells
     getEmptyCloneOfTable: function( table ) {
       var $table = $(table),
           $clone = $table.clone();
+
+      // Clear the id off the clone
+      this.sanitzeClone( $clone );
 
       $clone.find('tbody').html('');
       $clone.find('thead').html('');
