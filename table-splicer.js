@@ -153,9 +153,11 @@
 
           $sampleRow    = $table.find('tr:first-child'),
           $colGroup     = $table.find('colgroup'),
+          $cloneCols    = $clone.find('colgroup');
 
-          $cloneCols;
-
+      if($cloneCols && $cloneCols.length > 0) {
+        $cloneCols.remove();
+      }
       if($colGroup.length === 0) {
         $colGroup = $('<colgroup></colgroup>');
         $clone.prepend( $colGroup );
@@ -189,6 +191,10 @@
       this.generateColsForTableClone( $table, $clone );
       return $clone;
     },
+
+    matchTableLayout: function( sourceTable, copyingTable ) {
+      this.generateColsForTableClone( sourceTable, copyingTable );
+    }
   };
 
   exports.TableSplicer = TableSplicer;

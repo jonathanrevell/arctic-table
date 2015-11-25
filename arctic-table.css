@@ -1,6 +1,7 @@
 .arctic-table {
   position:relative;
   overflow-x:hidden!important;
+  max-width:100%;
 }
 .arctic-table .arctic-table-wrapper {
   overflow:auto;
