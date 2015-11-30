@@ -89,7 +89,7 @@
 
       // For each cell, copy its width for the appropriate column
       var widths = _.map( $sampleCells, function( cell ) {
-        return  $(cell).width();
+        return  $(cell).innerWidth();
       });
 
       var zipped = _.zip( $clone.find('colgroup col'), widths);
